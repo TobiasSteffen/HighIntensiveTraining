@@ -6,6 +6,7 @@ import com.hit.calendarview.HitCalendarView;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.os.Bundle;
@@ -27,15 +28,8 @@ public class Main extends Activity implements OnDateChangeListener {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
-		calendar = new HitCalendarView(this);
-		
-		setContentView(R.layout.main);	
-		
-		//MyCalendarView y = new MyCalendarView(this);
-		//setContentView(y);
+		setContentView(R.layout.main);
 	}
-
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -56,13 +50,9 @@ public class Main extends Activity implements OnDateChangeListener {
 		return super.onOptionsItemSelected(item);
 	}
 
+
 	@Override
 	public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {
 		// TODO Auto-generated method stub
-		Toast.makeText(getApplicationContext(), 
-		           "Year: " + year + "\n" +
-		           "Month: " + month + "\n" +
-		           "Day of Month: " + dayOfMonth, 
-		           Toast.LENGTH_SHORT).show();
 	}
 }
