@@ -6,15 +6,27 @@ import java.util.Calendar;
 import java.util.Hashtable;
 import java.util.Locale;
 
+import com.example.hitdraganddrop.ActivityOnDragListener;
+import com.example.hitdraganddrop.ActivityOnDropListener;
+import com.example.hitdraganddrop.DragAndDropInterface;
+import com.example.hitswipe.ActivitySwipeDetector;
+import com.example.hitswipe.SwipeInterface;
+
 import android.app.Activity;
+import android.content.ClipData;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.view.DragEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.DragShadowBuilder;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
@@ -23,100 +35,79 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class Main extends Activity {
+public class Main extends Activity implements SwipeInterface, DragAndDropInterface {
 
-	Calendar cal = Calendar.getInstance(Locale.GERMANY);
+	private Calendar cal = Calendar.getInstance(Locale.GERMANY);
+	private GridLayout glmonth;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		
-		//Setting the Month on top
-		TextView tvmonth = (TextView) findViewById(R.id.tvmonth);
-		tvmonth.setText(cal.getDisplayName(Calendar.MONTH, 
-				Calendar.LONG, Locale.GERMANY));
+		glmonth = (GridLayout) findViewById(R.id.glmonth);
+		setupView();
+
+		LinearLayout lltraining = (LinearLayout) findViewById(R.id.lltraining);
+		GridLayout trainingday = ((GridLayout) (((FrameLayout) lltraining.getChildAt(0)).getChildAt(0)));
 		
-		//get the first day number of the Month
+		ActivityOnDragListener drag = new ActivityOnDragListener(this);
+		trainingday.setOnTouchListener(drag);
+		
+	}
+
+	private void setupView() {
+		// TODO Auto-generated method stub
+
+		LayoutInflater inflater = LayoutInflater.from(getBaseContext());
+		FrameLayout empty_day = (FrameLayout) inflater.inflate(R.layout.empty_day, glmonth, false);
+		FrameLayout style_day = (FrameLayout) inflater.inflate(R.layout.style_day, glmonth, false);
+		ActivitySwipeDetector swipe = new ActivitySwipeDetector(this);
+		ActivityOnDropListener drop = new ActivityOnDropListener(this);
+		
+		// setting the Month on top
+		TextView tvmonth = (TextView) findViewById(R.id.tvmonth);
+		tvmonth.setText(cal.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.GERMANY));
+
+		// get the first day number of the Month
 		cal.set(Calendar.DAY_OF_MONTH, 1);
 		String dayName = cal.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.GERMANY);
 		int dayOfWeek = dayOfWeek(dayName);
 
-		
-		GridLayout glmonth = (GridLayout) findViewById(R.id.glmonth);
-
-		LayoutInflater inflater = LayoutInflater.from(getBaseContext());
-		
-		FrameLayout empty_day = (FrameLayout) inflater.inflate(R.layout.empty_day, glmonth, false);
-		FrameLayout style_day = (FrameLayout) inflater.inflate(R.layout.style_day, glmonth, false);
-		
-		//Setting up empty_days
-		for (int i=0; i<dayOfWeek; i++) {
+		// AddView empty_days
+		for (int i = 0; i < dayOfWeek; i++) {
 			glmonth.addView(empty_day);
-			empty_day = (FrameLayout) inflater.inflate(R.layout.empty_day, glmonth, false);	
+			empty_day = (FrameLayout) inflater.inflate(R.layout.empty_day, glmonth, false);
 		}
-		
-		//Setting up style_day
-		int daysOfMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
-		for (int i=0; i < daysOfMonth; i++){
-			glmonth.addView(style_day);
-			style_day = (FrameLayout) inflater.inflate(R.layout.style_day, glmonth, false);	
-		}
-		
-		//Setting up Day text Numbers and tags
-		for (int i = dayOfWeek; i <= daysOfMonth; i++) {
-			((TextView) (((GridLayout) (((GridLayout) (((FrameLayout) glmonth.getChildAt(i)).getChildAt(0)))
-					.getChildAt(0))).getChildAt(2))).setText(((Integer) (i)).toString());
-			((GridLayout) (((FrameLayout) glmonth.getChildAt(i)).getChildAt(0)))
-				.setTag("day" + i);
-		}
-		
-		/*
-		glmonth.addView(style_day);
-		
-		style_day = (FrameLayout) inflater.inflate(R.layout.style_day, glmonth, false);
-		glmonth.addView(style_day);
-		
-		
-		for (int i = 0;i!=10;i+=1) {
-			style_day = (FrameLayout) inflater.inflate(R.layout.style_day, null, false);
-			glmonth.addView(style_day);
-		}
-		*/
-		
-		//layout.setLayoutParams(new LayoutParams());
-		
-		//geht nicht
-		//GridLayout test = (GridLayout) findViewById(R.id.day1);
-		
-		//GridLayout.LayoutParams labelLayoutParams = new GridLayout.LayoutParams();
-		//labelLayoutParams.height = test.getHeight();
-		//labelLayoutParams.width = test.getWidth();
-		//layout.setLayoutParams(labelLayoutParams);
-		
-		//glmonth.addView(R.layout.style_day);
-		
-		//String str = 
-		Toast.makeText(getApplicationContext(), ((Integer) dayOfWeek).toString() , 
-				Toast.LENGTH_SHORT).show();
-		
-		//GridLayout glmonth = (GridLayout) findViewById(n);
 
-		//month.setOnClickListener((android.view.View.OnClickListener) this);
-		//month.setOnClickListener((android.view.View.OnClickListener) this);
+		// AddView style_day
+		int daysOfMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+		for (int i = 0; i < daysOfMonth; i++) {
+			glmonth.addView(style_day);
+			style_day = (FrameLayout) inflater.inflate(R.layout.style_day, glmonth, false);
+		}
+		
+		// Set android:text, android:setTag and OnTouchListener
+		glmonth.setOnTouchListener(swipe);
+		glmonth.setOnDragListener(drop);
+		for (int i = 1; i <= daysOfMonth; i++) {
+			GridLayout day = ((GridLayout) (((FrameLayout) glmonth.getChildAt(i + dayOfWeek - 1)).getChildAt(0)));
+			((TextView) (((GridLayout) (day).getChildAt(0))).getChildAt(2)).setText(((Integer) (i)).toString());
+			day.setTag("day" + i);
+			day.setOnTouchListener(swipe);
+			day.setOnDragListener(drop);
+		}
 	}
-	
+
 	private int dayOfWeek(String s) {
-		Hashtable<String, Integer> days
-			= new Hashtable<String, Integer>();
+		Hashtable<String, Integer> days = new Hashtable<String, Integer>();
 		days.put("Montag", 0);
 		days.put("Dienstag", 1);
-		days.put("Mitwoch", 2);
+		days.put("Mittwoch", 2);
 		days.put("Donnerstag", 3);
 		days.put("Freitag", 4);
 		days.put("Samstag", 5);
 		days.put("Sonntag", 6);
-			   		
 		return days.get(s);
 	}
 
@@ -141,27 +132,82 @@ public class Main extends Activity {
 
 	public void onClick(View v) {
 		// TODO Auto-generated method stub
-	
-		//Iterate threw all Days and find out which button was clicked
-		int i = 1;
-		int j = getResources().getIdentifier("day" + i, "id",
-				getPackageName());
-		int p = v.getId();
-		
-		int n = v.getId();
-	
-		String s = "";
-		//String t = ((TextView) ((GridLayout) glmonth.getChildAt(1)).
-		//		getChildAt(3)).getText().toString();
-		
-		Toast.makeText(getApplicationContext(), ((String) v.getTag()).toString() , 
-				Toast.LENGTH_SHORT).show();
+		// Toast.makeText(getApplicationContext(), ((String)
+		// v.getTag()).toString() ,
+		// Toast.LENGTH_SHORT).show();
 	}
 
 	@Override
-	public boolean onTouch(View v, MotionEvent event) {
+	public void bottom2top(View v) {
+
+	}
+	public void top2bottom(View v) {
+		
+	}
+	
+	@Override
+	public void left2right(View v) {
 		// TODO Auto-generated method stub
+		// Toast.makeText(getApplicationContext(), ((String) v.getTag()) ,
+		// Toast.LENGTH_SHORT).show();
+		// startActivity(new Intent("android.intent.action.MAIN"));
+		glmonth.removeAllViews();
+		cal.add(Calendar.MONTH, -1);
+		setupView();
+	}
+
+	@Override
+	public void right2left(View v) {
+		// TODO Auto-generated method stub
+		glmonth.removeAllViews();
+		cal.add(Calendar.MONTH, 1);
+		setupView();
+	}
+
+	@Override
+	public boolean onDrag(View v, MotionEvent motionevent) {
+		// TODO Auto-generated method stub
+		if (motionevent.getAction() == MotionEvent.ACTION_DOWN) {
+		      ClipData data = ClipData.newPlainText("", "");
+		      DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(v);
+		      v.startDrag(data, shadowBuilder, v, 0);
+		      return true;
+		}
 		return false;
 	}
-	on
+	
+	@Override
+	public void onDrop(View v, DragEvent event) {
+		// TODO Auto-generated method stub
+		
+		v.setBackgroundColor(getResources().getColor(R.color.Red));
+		
+		/*
+		View view = (View) event.getLocalState();
+		ViewGroup owner = (ViewGroup) view.getParent();
+		owner.removeView(view);
+		LinearLayout container = (LinearLayout) v;
+		container.addView(view);
+		view.setVisibility(View.VISIBLE);
+		*/
+		
+	}
+
+	@Override
+	public void onDropExit(View v, DragEvent dragevent) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onDropEntered(View v, DragEvent dragevent) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void onDropEnded(View v, DragEvent dragevent) {
+		// TODO Auto-generated method stub
+
+	}
 }
